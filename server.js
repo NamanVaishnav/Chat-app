@@ -20,6 +20,25 @@ const users = [
     }
 ]
 
+const Todos = [
+    {
+        title: "buy book",
+        by: "1"
+    },
+    {
+        title: "buy Headphone",
+        by: "1"
+    },
+    {
+        title: "buy Coke",
+        by: "2"
+    },
+    {
+        title: "buy Soda",
+        by: "2"
+    }
+]
+
 // create schema
 const typeDefs = gql`
     type Query{
@@ -28,15 +47,21 @@ const typeDefs = gql`
     }
 
     type User{
-        id:ID
-        firstname:String
-        lastName:String
-        email:String
+        id:ID!
+        firstname:String!
+        lastname:String!
+        email:String!
+        todos:[Todo]
+   }
+
+   type Todo {
+       title:String!
+       by: ID!
    }
 
    input UserInput{
         firstname: String!
-        lastName:String!
+        lastname:String!
         email:String!
         password:String!
    }
@@ -55,6 +80,11 @@ const resolvers = {
         user: (parent, { id }, context) => {
             console.log(id);
             return users.find(item => item.id == id);
+        }
+    },
+    User: {
+        todos: (parent) => {
+            return Todos.filter(todo => todo.by == parent.id); // fetching data from parent for comparison
         }
     },
     Mutation: {
