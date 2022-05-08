@@ -77,8 +77,8 @@ const typeDefs = gql`
 const resolvers = {
     Query: {
         users: () => users,
-        user: (parent, { id }, context) => {
-            console.log(id);
+        user: (parent, { id }, { userLoggedIn }) => {
+            if (!userLoggedIn) throw new Error("User is not logged in");
             return users.find(item => item.id == id);
         }
     },
@@ -100,7 +100,13 @@ const resolvers = {
 }
 
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: {
+        userLoggedIn: true
+    }
+});
 
 server.listen().then(({ url }) => {
     console.log('🚀 Server ready at ${url}', url);
