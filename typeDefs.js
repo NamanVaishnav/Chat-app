@@ -4,6 +4,7 @@ const typeDefs = gql`
 
 type Query{
   users: [User]
+  messagesByUser(receiverId:Int!): [Message]
 }
 
 type User {
@@ -29,9 +30,20 @@ type Token {
   token: String!
 }
 
+scalar Date
+
+type Message {
+  id:ID!
+  text:String!
+  receiverId:Int!
+  senderId:Int!
+  createdAt:Date!
+}
+
 type Mutation{
      sigupUser(userNew:UserInput!):User
      signinUser(userSignin:UserSignInput!): Token
+     createMessage(receiverId: Int!, text: String!):Message
 }
 
 `

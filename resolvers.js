@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken'
 
 const prisma = new pc.PrismaClient()
 // create resolver
+
 const resolvers = {
     Query: {
         users: async (_, args, { userId }) => {
@@ -22,6 +23,28 @@ const resolvers = {
                 }
             })
             return users
+        },
+        messagesByUser: async(_,{receiverId}, {userId})=>{
+            if (!userId) throw new ForbiddenError("You must be logged in")
+            const messages = await prisma.message.findMany({
+                where:{
+                    OR: [
+                        {
+                            senderId:userId,
+                            receiverId:receiverId
+                        },
+                        {
+                            senderId:receiverId,
+                            receiverId:userId
+                        },
+                    ]
+                },
+                orderBy:{
+                    createdAt:"asc"
+                }
+            })
+
+            return messages
         }
     },
 
@@ -40,11 +63,22 @@ const resolvers = {
         },
         signinUser: async (_, { userSignin }) => {
             const user = await prisma.user.findUnique({ where: { email: userSignin.email } })
-            if (!user) throw new AuthenticationError("User doesn't exist with this email")
-            const doMatch = await bcrypt.compare(userSignin.password, user.password)
+            if (!user) throw new AuthenticationError("User doesn't exists with this email")
+            const doMatch = await bcrypt.compare(userSignin.password, user.password) // Compare Password
             if (!doMatch) throw new AuthenticationError("email or password is invalid")
             const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET)
-            return { token }
+            return { token } // return { token : token } // key value pair is same so directly pass token
+        },
+        createMessage: async (_, {receiverId, text}, { userId })=>{
+            if (!userId) throw new ForbiddenError("You must be logged in")
+            const message = await prisma.message.create({
+                data:{
+                    text,
+                    receiverId,
+                    senderId:userId
+                }
+            })
+            return message
 
         }
     }
